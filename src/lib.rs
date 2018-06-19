@@ -15,24 +15,52 @@ use combine::{ParseError, Parser, Stream};
 
 use std::{io::Read, mem};
 
+/// An unnamed tag.
 #[derive(Clone, Debug, PartialEq)]
 pub enum UnnamedTag {
+    /// The `TAG_End` tag. Normally not found anywhere but inside `TAG_Compound`s.
     End,
+
+    /// The `TAG_Byte` tag.
     Byte(i8),
+
+    /// The `TAG_Short` tag.
     Short(i16),
+
+    /// The `TAG_Int` tag.
     Int(i32),
+
+    /// The `TAG_Long` tag.
     Long(i64),
+
+    /// The `TAG_Float` tag.
     Float(f32),
+
+    /// The `TAG_Double` tag.
     Double(f64),
+
+    /// The `TAG_ByteArray` tag.
     ByteArray(Vec<i8>),
+
+    /// The `TAG_String` tag.
     String(String),
+
+    /// The `TAG_List` tag. This contains unnamed tags, which are guaranteed to be all of the same
+    /// type.
     List(Vec<UnnamedTag>),
+
+    /// The `TAG_Compound` tag. This contains named tags, but the `TAG_End` tag which is always
+    /// present at the end is removed for ease of use.
     Compound(Vec<NamedTag>),
 }
 
+/// A named tag. Contains only the name on its own, and the actual tag's contents are accessible
+/// via the `content` field.
 #[derive(Clone, Debug, PartialEq)]
 pub struct NamedTag {
+    /// The name of the tag. This is the empty string if the inner tag is a `TAG_End`.
     pub name: String,
+    /// The actual content of the tag.
     pub content: UnnamedTag,
 }
 
@@ -190,6 +218,8 @@ where
     )
 }
 
+/// Decode a [`Read`] instance. It is assumed that, as the spec defines, the contents of the
+/// instance are gzipped.
 pub fn decode<R: Read>(mut input: R) -> Result<NamedTag, failure::Error> {
     let decoder = libflate::gzip::Decoder::new(&mut input)?;
     let mut stream = BufferedStream::new(State::new(ReadStream::new(decoder)), 4096);

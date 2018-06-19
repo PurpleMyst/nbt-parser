@@ -1,7 +1,12 @@
 [package]
 name = "nbt-parser"
-version = "0.1.0"
+description = "A minecraft NBT parser."
+license-file = "LICENSE"
+repository = "https://github.com/PurpleMyst/nbt-parser"
+version = "1.0.0"
 authors = ["Purple Myst <PurpleMyst@users.noreply.github.com>"]
+readme = "README.md"
+doc = true
 
 [dependencies]
 combine = "3.3.2"
