@@ -5,3 +5,5 @@ authors = ["Purple Myst <PurpleMyst@users.noreply.github.com>"]
 
 [dependencies]
 combine = "3.3.2"
+libflate = "0.1.15"
+failure = "0.1.1"

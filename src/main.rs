@@ -1,12 +1,19 @@
-extern crate combine;
 extern crate nbt_parser;
 
-use combine::Parser;
+extern crate failure;
 
-fn main() {
-    let filename = std::env::args().nth(1).expect("USAGE: cargo run FILENAME");
-    let contents = std::fs::read(filename).unwrap();
-    let mut parser = nbt_parser::named_tag();
-    let nbt_data = parser.easy_parse(contents.as_slice()).unwrap().0;
+use std::{env, fs};
+
+// TODO: Use `ExitCode` once it gets stabilized.
+fn main() -> Result<(), failure::Error> {
+    let filename = if let Some(filename) = env::args().nth(1) {
+        filename
+    } else {
+        eprintln!("USAGE: cargo run FILENAME");
+        return Ok(());
+    };
+    let file = fs::File::open(filename)?;
+    let nbt_data = nbt_parser::decode(file)?;
     println!("{:#?}", nbt_data);
+    Ok(())
 }

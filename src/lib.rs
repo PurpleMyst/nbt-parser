@@ -1,14 +1,19 @@
 #[macro_use]
 extern crate combine;
 
+extern crate libflate;
+
+extern crate failure;
+
 use combine::parser::byte::{
     byte,
     num::{be_f32, be_f64, be_i16, be_i32, be_i64, be_u16},
 };
+use combine::stream::{buffered::BufferedStream, state::State, ReadStream};
 use combine::{any, count, many, unexpected};
 use combine::{ParseError, Parser, Stream};
 
-use std::mem;
+use std::{io::Read, mem};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum UnnamedTag {
@@ -155,7 +160,7 @@ where
         .map(UnnamedTag::Compound)
 }
 
-pub fn named_tag<I>() -> impl Parser<Input = I, Output = NamedTag>
+fn named_tag<I>() -> impl Parser<Input = I, Output = NamedTag>
 where
     I: Stream<Item = u8>,
     // Necessary due to rust-lang/rust#24159
@@ -183,4 +188,10 @@ where
         do_it!(9 => list_tag()),
         do_it!(10 => compound_tag())
     )
+}
+
+pub fn decode<R: Read>(mut input: R) -> Result<NamedTag, failure::Error> {
+    let decoder = libflate::gzip::Decoder::new(&mut input)?;
+    let mut stream = BufferedStream::new(State::new(ReadStream::new(decoder)), 4096);
+    Ok(named_tag().parse_stream(&mut stream).map_err(|c| c.into_inner().error)?.0)
 }
