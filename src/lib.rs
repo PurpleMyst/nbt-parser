@@ -222,6 +222,11 @@ where
 /// instance are gzipped.
 pub fn decode<R: Read>(mut input: R) -> Result<NamedTag, failure::Error> {
     let decoder = libflate::gzip::Decoder::new(&mut input)?;
-    let mut stream = BufferedStream::new(State::new(ReadStream::new(decoder)), 4096);
+    decode_uncompressed(decoder)
+}
+
+/// Decode a [`Read`] instance. It is assumed that the contents of the instance are not gzipped.
+pub fn decode_uncompressed<R: Read>(input: R) -> Result<NamedTag, failure::Error> {
+    let mut stream = BufferedStream::new(State::new(ReadStream::new(input)), 4096);
     Ok(named_tag().parse_stream(&mut stream).map_err(|c| c.into_inner().error)?.0)
 }
